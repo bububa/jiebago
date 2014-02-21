@@ -2,7 +2,7 @@ package jiebago
 
 import (
 	"fmt"
-	"github.com/wangbin/jiebago/finalseg"
+	"github.com/bububa/jiebago/finalseg"
 	"regexp"
 	"sort"
 )
@@ -31,10 +31,10 @@ func (routes Routes) Len() int {
 func (routes Routes) Less(i, j int) bool {
 	routei := routes[i]
 	routej := routes[j]
-	if routei.Freq < routej.Freq {
+	if routei.Freq > routej.Freq {
 		return true
 	} else if routei.Freq == routej.Freq {
-		return routei.Index < routej.Index
+		return routei.Index > routej.Index
 	}
 	return false
 }
@@ -64,6 +64,40 @@ func RegexpSplit(r *regexp.Regexp, sentence string) []string {
 	}
 
 	return result
+}
+
+func RegexpSplitN(re *regexp.Regexp, s string, n int) []string {
+
+	if n == 0 {
+		return nil
+	}
+
+	if len(re.String()) > 0 && len(s) == 0 {
+		return []string{""}
+	}
+
+	matches := re.FindAllStringIndex(s, n)
+	strings := make([]string, 0, len(matches))
+
+	beg := 0
+	end := 0
+	for _, match := range matches {
+		if n > 0 && len(strings) >= n-1 {
+			break
+		}
+
+		end = match[0]
+		if match[1] != 0 {
+			strings = append(strings, s[beg:end])
+		}
+		beg = match[1]
+	}
+
+	if end != len(s) {
+		strings = append(strings, s[beg:])
+	}
+
+	return strings
 }
 
 func GetDAG(sentence string) map[int][]int {
@@ -128,7 +162,8 @@ func Calc(sentence string, dag map[int][]int, idx int) map[int]*Route {
 			}
 			candidates = append(candidates, route)
 		}
-		sort.Sort(sort.Reverse(candidates))
+		//sort.Sort(sort.Reverse(candidates))
+		sort.Sort(candidates)
 		routes[idx] = candidates[0]
 	}
 	return routes
@@ -293,7 +328,8 @@ func Cut(sentence string, cut_all bool, HMM bool) []string {
 			var ssf skipSplitFunc
 			if cut_all {
 				ssf = func(sentence string) []string {
-					return re_skip.Split(sentence, -1)
+					//return re_skip.Split(sentence, -1)
+					return RegexpSplitN(re_skip, sentence, -1)
 				}
 			} else {
 				ssf = func(sentence string) []string {

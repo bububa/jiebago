@@ -33,9 +33,9 @@ func (vs Viterbis) Len() int {
 
 func (vs Viterbis) Less(i, j int) bool {
 	if vs[i].prob == vs[j].prob {
-		return vs[i].state < vs[j].state
+		return vs[i].state > vs[j].state
 	}
-	return vs[i].prob < vs[j].prob
+	return vs[i].prob > vs[j].prob
 }
 
 func (vs Viterbis) Swap(i, j int) {
@@ -76,7 +76,8 @@ func viterbi(obs []rune, states []byte) (float64, []byte) {
 				prob0 := V[t-1][y0] + transP + em_p
 				vs0 = append(vs0, &Viterbi{prob: prob0, state: y0})
 			}
-			sort.Sort(sort.Reverse(vs0))
+			//sort.Sort(sort.Reverse(vs0))
+			sort.Sort(vs0)
 			V[t][y] = vs0[0].prob
 			pp := make([]byte, len(path[vs0[0].state]))
 			copy(pp, path[vs0[0].state])
@@ -88,7 +89,8 @@ func viterbi(obs []rune, states []byte) (float64, []byte) {
 	for _, y := range []byte{'E', 'S'} {
 		vs = append(vs, &Viterbi{V[len(obs)-1][y], y})
 	}
-	sort.Sort(sort.Reverse(vs))
+	//sort.Sort(sort.Reverse(vs))
+	sort.Sort(vs)
 	v := vs[0]
 	return v.prob, path[v.state]
 }
