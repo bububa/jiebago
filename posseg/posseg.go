@@ -3,7 +3,7 @@ package posseg
 import (
 	"bufio"
 	"fmt"
-	"github.com/wangbin/jiebago"
+	"github.com/bububa/jiebago"
 	"os"
 	"path/filepath"
 	"regexp"
