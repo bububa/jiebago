@@ -7,11 +7,15 @@ import (
 	"sort"
 )
 
-var (
-	Dictionary     = "dict.txt"
+type Jieba struct {
+	Dictionary     string
 	TT             *TopTrie
-	UserWordTagTab = make(map[string]string)
-)
+	UserWordTagTab map[string]string
+}
+
+func NewJieba() *Jieba {
+	return &Jieba{UserWordTagTab: make(map[string]string)}
+}
 
 type Route struct {
 	Freq  float64
@@ -100,11 +104,11 @@ func RegexpSplitN(re *regexp.Regexp, s string, n int) []string {
 	return strings
 }
 
-func GetDAG(sentence string) map[int][]int {
+func (this *Jieba) GetDAG(sentence string) map[int][]int {
 	dag := make(map[int][]int)
 	runes := []rune(sentence)
 	n := len(runes)
-	p := TT.T
+	p := this.TT.T
 	i, j := 0, 0
 	var c rune
 	for {
@@ -125,10 +129,10 @@ func GetDAG(sentence string) map[int][]int {
 			if j >= n {
 				i += 1
 				j = i
-				p = TT.T
+				p = this.TT.T
 			}
 		} else {
-			p = TT.T
+			p = this.TT.T
 			i += 1
 			j = i
 		}
@@ -141,7 +145,7 @@ func GetDAG(sentence string) map[int][]int {
 	return dag
 }
 
-func Calc(sentence string, dag map[int][]int, idx int) map[int]*Route {
+func (this *Jieba) Calc(sentence string, dag map[int][]int, idx int) map[int]*Route {
 	runes := []rune(sentence)
 	number := len(runes)
 	routes := make(map[int]*Route)
@@ -156,10 +160,10 @@ func Calc(sentence string, dag map[int][]int, idx int) map[int]*Route {
 				word = string(runes[idx : i+1])
 			}
 			var route *Route
-			if _, ok := TT.Freq[word]; ok {
-				route = &Route{TT.Freq[word] + routes[i+1].Freq, i}
+			if _, ok := this.TT.Freq[word]; ok {
+				route = &Route{this.TT.Freq[word] + routes[i+1].Freq, i}
 			} else {
-				route = &Route{TT.MinFreq + routes[i+1].Freq, i}
+				route = &Route{this.TT.MinFreq + routes[i+1].Freq, i}
 			}
 			candidates = append(candidates, route)
 		}
@@ -172,9 +176,9 @@ func Calc(sentence string, dag map[int][]int, idx int) map[int]*Route {
 
 type cutAction func(sentence string) []string
 
-func cut_DAG(sentence string) []string {
-	dag := GetDAG(sentence)
-	routes := Calc(sentence, dag, 0)
+func (this *Jieba) cut_DAG(sentence string) []string {
+	dag := this.GetDAG(sentence)
+	routes := this.Calc(sentence, dag, 0)
 	x := 0
 	var y int
 	runes := []rune(sentence)
@@ -196,7 +200,7 @@ func cut_DAG(sentence string) []string {
 					buf = make([]rune, 0)
 				} else {
 					bufString := string(buf)
-					if _, ok := TT.Freq[bufString]; !ok {
+					if _, ok := this.TT.Freq[bufString]; !ok {
 						recognized := finalseg.Cut(bufString)
 						for _, t := range recognized {
 							result = append(result, t)
@@ -219,7 +223,7 @@ func cut_DAG(sentence string) []string {
 			result = append(result, string(buf))
 		} else {
 			bufString := string(buf)
-			if _, ok := TT.Freq[bufString]; !ok {
+			if _, ok := this.TT.Freq[bufString]; !ok {
 				recognized := finalseg.Cut(bufString)
 				for _, t := range recognized {
 					result = append(result, t)
@@ -234,11 +238,11 @@ func cut_DAG(sentence string) []string {
 	return result
 }
 
-func cut_DAG_NO_HMM(sentence string) []string {
+func (this *Jieba) cut_DAG_NO_HMM(sentence string) []string {
 	result := make([]string, 0)
 	re_eng := regexp.MustCompile(`[[:alnum:]]`)
-	dag := GetDAG(sentence)
-	routes := Calc(sentence, dag, 0)
+	dag := this.GetDAG(sentence)
+	routes := this.Calc(sentence, dag, 0)
 	x := 0
 	var y int
 	runes := []rune(sentence)
@@ -269,10 +273,10 @@ func cut_DAG_NO_HMM(sentence string) []string {
 	return result
 }
 
-func cut_All(sentence string) []string {
+func (this *Jieba) cut_All(sentence string) []string {
 	result := make([]string, 0)
 	runes := []rune(sentence)
-	dag := GetDAG(sentence)
+	dag := this.GetDAG(sentence)
 	old_j := -1
 	ks := make([]int, 0)
 	for k := range dag {
@@ -296,7 +300,7 @@ func cut_All(sentence string) []string {
 	return result
 }
 
-func Cut(sentence string, cut_all bool, HMM bool) []string {
+func (this *Jieba) Cut(sentence string, cut_all bool, HMM bool) []string {
 	result := make([]string, 0)
 	var re_han, re_skip *regexp.Regexp
 	if cut_all {
@@ -307,21 +311,22 @@ func Cut(sentence string, cut_all bool, HMM bool) []string {
 		re_skip = regexp.MustCompile(`(\r\n|\s)`)
 	}
 	blocks := RegexpSplit(re_han, sentence)
-	var cut_block cutAction
-	if HMM {
-		cut_block = cut_DAG
-	} else {
-		cut_block = cut_DAG_NO_HMM
-	}
-	if cut_all {
-		cut_block = cut_All
-	}
+	var cut_block []string
+
 	for _, blk := range blocks {
 		if len(blk) == 0 {
 			continue
 		}
 		if re_han.MatchString(blk) {
-			for _, word := range cut_block(blk) {
+			if HMM {
+				cut_block = this.cut_DAG(blk)
+			} else {
+				cut_block = this.cut_DAG_NO_HMM(blk)
+			}
+			if cut_all {
+				cut_block = this.cut_All(blk)
+			}
+			for _, word := range cut_block {
 				result = append(result, word)
 			}
 		} else {
@@ -354,9 +359,9 @@ func Cut(sentence string, cut_all bool, HMM bool) []string {
 	return result
 }
 
-func CutForSearch(sentence string, hmm bool) []string {
+func (this *Jieba) CutForSearch(sentence string, hmm bool) []string {
 	result := make([]string, 0)
-	words := Cut(sentence, false, hmm)
+	words := this.Cut(sentence, false, hmm)
 	for _, word := range words {
 		runes := []rune(word)
 		for _, increment := range []int{2, 3} {
@@ -364,7 +369,7 @@ func CutForSearch(sentence string, hmm bool) []string {
 				var gram2 string
 				for i := 0; i < len(runes)-increment+1; i++ {
 					gram2 = string(runes[i : i+increment])
-					if _, ok := TT.Freq[gram2]; ok {
+					if _, ok := this.TT.Freq[gram2]; ok {
 						result = append(result, gram2)
 					}
 				}
@@ -375,7 +380,9 @@ func CutForSearch(sentence string, hmm bool) []string {
 	return result
 }
 
-func SetDictionary(dict_path string) (err error) {
+func (this *Jieba) SetDictionary(dict_path string) (TT *TopTrie, err error) {
 	TT, err = newTopTrie(dict_path)
+	this.TT = TT
+	this.Dictionary = dict_path
 	return
 }

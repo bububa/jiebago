@@ -154,14 +154,14 @@ func (tt *TopTrie) addWord(word string, freq float64) {
 	}
 }
 
-func addWord(word string, freq float64, tag string) {
+func (this *Jieba) addWord(word string, freq float64, tag string) {
 	if len(tag) > 0 {
-		UserWordTagTab[word] = strings.TrimSpace(tag)
+		this.UserWordTagTab[word] = strings.TrimSpace(tag)
 	}
-	TT.addWord(word, freq)
+	this.TT.addWord(word, freq)
 }
 
-func LoadUserDict(file_path string) error {
+func (this *Jieba) LoadUserDict(file_path string) error {
 	file, openError := os.Open(file_path)
 	if openError != nil {
 		return openError
@@ -182,7 +182,7 @@ func LoadUserDict(file_path string) error {
 		if len(words) == 3 {
 			tag = words[2]
 		}
-		addWord(word, freq, tag)
+		this.addWord(word, freq, tag)
 	}
 
 	return scanner.Err()

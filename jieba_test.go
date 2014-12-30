@@ -622,19 +622,21 @@ var (
 	}
 )
 
+var jieba *Jieba = NewJieba()
+
 func init() {
-	SetDictionary("dict.txt")
+	jieba.SetDictionary("dict.txt")
 }
 
 func TestCutDAG(t *testing.T) {
-	result := cut_DAG("BP神经网络如何训练才能在分类时增加区分度？")
+	result := jieba.cut_DAG("BP神经网络如何训练才能在分类时增加区分度？")
 	if len(result) != 11 {
 		t.Error(result)
 	}
 }
 
 func TestCutDAGNoHmm(t *testing.T) {
-	result := cut_DAG_NO_HMM("BP神经网络如何训练才能在分类时增加区分度？")
+	result := jieba.cut_DAG_NO_HMM("BP神经网络如何训练才能在分类时增加区分度？")
 	if len(result) != 11 {
 		t.Error(result)
 	}
@@ -656,7 +658,7 @@ func TestRegexpSplit(t *testing.T) {
 func TestDefaultCut(t *testing.T) {
 	var result []string
 	for index, content := range test_contents {
-		result = Cut(content, false, true)
+		result = jieba.Cut(content, false, true)
 		if len(result) != len(defaultCutResult[index]) {
 			t.Errorf("default cut for %s length should be %d not %d\n",
 				content, len(defaultCutResult[index]), len(result))
@@ -672,7 +674,7 @@ func TestDefaultCut(t *testing.T) {
 func TestCutAll(t *testing.T) {
 	var result []string
 	for index, content := range test_contents {
-		result = Cut(content, true, true)
+		result = jieba.Cut(content, true, true)
 		if len(result) != len(cutAllResult[index]) {
 			t.Errorf("cut all for %s length should be %d not %d\n",
 				content, len(cutAllResult[index]), len(result))
@@ -688,7 +690,7 @@ func TestCutAll(t *testing.T) {
 func TestDefaultCutNoHMM(t *testing.T) {
 	var result []string
 	for index, content := range test_contents {
-		result = Cut(content, false, false)
+		result = jieba.Cut(content, false, false)
 		if len(result) != len(defaultCutNoHMMResult[index]) {
 			t.Errorf("default cut no hmm for %s length should be %d not %d\n",
 				content, len(defaultCutNoHMMResult[index]), len(result))
@@ -704,7 +706,7 @@ func TestDefaultCutNoHMM(t *testing.T) {
 func TestCutForSearch(t *testing.T) {
 	var result []string
 	for index, content := range test_contents {
-		result = CutForSearch(content, true)
+		result = jieba.CutForSearch(content, true)
 		if len(result) != len(cutForSearchResult[index]) {
 			t.Errorf("cut for search for %s length should be %d not %d\n",
 				content, len(cutForSearchResult[index]), len(result))
@@ -716,7 +718,7 @@ func TestCutForSearch(t *testing.T) {
 		}
 	}
 	for index, content := range test_contents {
-		result = CutForSearch(content, false)
+		result = jieba.CutForSearch(content, false)
 		if len(result) != len(cutForSearchNoHMMResult[index]) {
 			t.Errorf("cut for search no hmm for %s length should be %d not %d\n",
 				content, len(cutForSearchNoHMMResult[index]), len(result))
@@ -731,9 +733,9 @@ func TestCutForSearch(t *testing.T) {
 
 func TestSetdictionary(t *testing.T) {
 	var result []string
-	SetDictionary("foobar.txt")
+	jieba.SetDictionary("foobar.txt")
 	for index, content := range test_contents {
-		result = Cut(content, false, true)
+		result = jieba.Cut(content, false, true)
 		if len(result) != len(userDictCutResult[index]) {
 			t.Errorf("default cut with user dictionary for %s length should be %d not %d\n",
 				content, len(userDictCutResult[index]), len(result))
@@ -747,13 +749,13 @@ func TestSetdictionary(t *testing.T) {
 }
 
 func TestLoadUserDict(t *testing.T) {
-	SetDictionary("dict.txt")
-	LoadUserDict("userdict.txt")
+	jieba.SetDictionary("dict.txt")
+	jieba.LoadUserDict("userdict.txt")
 
 	sentence := "李小福是创新办主任也是云计算方面的专家; 什么是八一双鹿例如我输入一个带“韩玉赏鉴”的标题，在自定义词库中也增加了此词为N类型"
 	result := []string{"\u674e\u5c0f\u798f", "\u662f", "\u521b\u65b0\u529e", "\u4e3b\u4efb", "\u4e5f", "\u662f", "\u4e91\u8ba1\u7b97", "\u65b9\u9762", "\u7684", "\u4e13\u5bb6", ";", " ", "\u4ec0\u4e48", "\u662f", "\u516b\u4e00\u53cc\u9e7f", "\u4f8b\u5982", "\u6211", "\u8f93\u5165", "\u4e00\u4e2a", "\u5e26", "\u201c", "\u97e9\u7389\u8d4f\u9274", "\u201d", "\u7684", "\u6807\u9898", "\uff0c", "\u5728", "\u81ea\u5b9a\u4e49\u8bcd", "\u5e93\u4e2d", "\u4e5f", "\u589e\u52a0", "\u4e86", "\u6b64", "\u8bcd\u4e3a", "N", "\u7c7b\u578b"}
 
-	words := Cut(sentence, false, true)
+	words := jieba.Cut(sentence, false, true)
 	if len(words) != len(result) {
 		t.Error(len(words))
 	}
@@ -765,7 +767,7 @@ func TestLoadUserDict(t *testing.T) {
 
 	sentence = "easy_install is great"
 	result = []string{"easy_install", " ", "is", " ", "great"}
-	words = Cut(sentence, false, true)
+	words = jieba.Cut(sentence, false, true)
 	if len(words) != len(result) {
 		t.Error(len(words))
 	}
@@ -777,7 +779,7 @@ func TestLoadUserDict(t *testing.T) {
 
 	sentence = "python 的正则表达式是好用的"
 	result = []string{"python", " ", "\u7684", "\u6b63\u5219\u8868\u8fbe\u5f0f", "\u662f", "\u597d\u7528", "\u7684"}
-	words = Cut(sentence, false, true)
+	words = jieba.Cut(sentence, false, true)
 	if len(words) != len(result) {
 		t.Error(words)
 		t.Error(result)

@@ -363,7 +363,7 @@ var (
 
 func TestTokenizeDefaultMode(t *testing.T) {
 	for index, sentence := range test_contents {
-		tokens := Tokenize(sentence, "default", true)
+		tokens := jieba.Tokenize(sentence, "default", true)
 		if len(tokens) != len(result[index]) {
 			t.Error(len(tokens))
 		}
@@ -377,7 +377,7 @@ func TestTokenizeDefaultMode(t *testing.T) {
 
 func TestTokenizeNoHMM(t *testing.T) {
 	for index, sentence := range test_contents {
-		tokens := Tokenize(sentence, "default", false)
+		tokens := jieba.Tokenize(sentence, "default", false)
 		if len(tokens) != len(noHmmResult[index]) {
 			t.Error(len(tokens))
 		}

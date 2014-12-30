@@ -29,8 +29,25 @@ func (tis TfIdfs) Swap(i, j int) {
 	tis[i], tis[j] = tis[j], tis[i]
 }
 
-func ExtractTags(sentence string, topK int) []string {
-	words := jiebago.Cut(sentence, false, true)
+type Analyzer struct {
+	jieba     *jiebago.Jieba
+	stopWords map[string]string
+	idfFreq   map[string]float64
+	medianIdf float64
+}
+
+func NewAnalyzer(jieba *jiebago.Jieba) *Analyzer {
+	return &Analyzer{
+		jieba:   jieba,
+		idfFreq: make(map[string]float64),
+		stopWords: map[string]string{
+			"the": "the", "of": "of", "is": "is", "and": "and", "to": "to", "in": "in", "that": "that", "we": "we", "for": "for", "an": "an", "are": "are", "by": "bye", "be": "be", "as": "as", "on": "on", "with": "with", "can": "can", "if": "of", "from": "from", "which": "which", "you": "you", "it": "it", "this": "this", "then": "then", "at": "at", "have": "have", "all": "all", "not": "not", "one": "one", "has": "has", "or": "or",
+		},
+	}
+}
+
+func (this *Analyzer) ExtractTags(sentence string, topK int) []string {
+	words := this.jieba.Cut(sentence, false, true)
 	freq := make(map[string]float64)
 
 	for _, w := range words {
@@ -38,7 +55,7 @@ func ExtractTags(sentence string, topK int) []string {
 		if utf8.RuneCountInString(w) < 2 {
 			continue
 		}
-		if _, ok := stopWords[w]; ok {
+		if _, ok := this.stopWords[w]; ok {
 			continue
 		}
 		if f, ok := freq[w]; ok {
@@ -57,10 +74,10 @@ func ExtractTags(sentence string, topK int) []string {
 	tis := make(TfIdfs, 0)
 	for k, v := range freq {
 		var ti TfIdf
-		if freq_, ok := idfFreq[k]; ok {
+		if freq_, ok := this.idfFreq[k]; ok {
 			ti = TfIdf{word: k, freq: freq_ * v}
 		} else {
-			ti = TfIdf{word: k, freq: medianIdf * v}
+			ti = TfIdf{word: k, freq: this.medianIdf * v}
 		}
 		tis = append(tis, ti)
 	}
