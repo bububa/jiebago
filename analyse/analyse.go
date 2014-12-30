@@ -1,7 +1,7 @@
 package analyse
 
 import (
-	"github.com/wangbin/jiebago"
+	"github.com/bububa/jiebago"
 	"sort"
 	"strings"
 	"unicode/utf8"

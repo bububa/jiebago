@@ -2,7 +2,7 @@ package jiebago
 
 import (
 	"fmt"
-	"github.com/wangbin/jiebago/finalseg"
+	"github.com/bububa/jiebago/finalseg"
 	"regexp"
 	"sort"
 )
