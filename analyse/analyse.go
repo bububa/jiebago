@@ -1,7 +1,7 @@
 package analyse
 
 import (
-	"github.com/bububa/jiebago"
+	"github.com/wangbin/jiebago"
 	"sort"
 	"strings"
 	"unicode/utf8"
@@ -20,9 +20,9 @@ func (tis TfIdfs) Len() int {
 
 func (tis TfIdfs) Less(i, j int) bool {
 	if tis[i].freq == tis[j].freq {
-		return tis[i].word < tis[j].word
+		return tis[i].word > tis[j].word
 	}
-	return tis[i].freq < tis[j].freq
+	return tis[i].freq > tis[j].freq
 }
 
 func (tis TfIdfs) Swap(i, j int) {
@@ -38,8 +38,7 @@ func ExtractTags(sentence string, topK int) []string {
 		if utf8.RuneCountInString(w) < 2 {
 			continue
 		}
-		index := stopWords.Search(w)
-		if index < len(stopWords) && stopWords[index] == w {
+		if _, ok := stopWords[w]; ok {
 			continue
 		}
 		if f, ok := freq[w]; ok {
@@ -65,7 +64,8 @@ func ExtractTags(sentence string, topK int) []string {
 		}
 		tis = append(tis, ti)
 	}
-	sort.Sort(sort.Reverse(tis))
+	//sort.Sort(sort.Reverse(tis))
+	sort.Sort(tis)
 	var topTfIdfs TfIdfs
 	if len(tis) > topK {
 		topTfIdfs = tis[:topK]

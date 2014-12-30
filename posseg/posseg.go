@@ -1,9 +1,9 @@
 package posseg
 
 import (
-	"bufio"
 	"fmt"
-	"github.com/bububa/jiebago"
+	"github.com/bububa/bufio"
+	"github.com/wangbin/jiebago"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -12,8 +12,7 @@ import (
 )
 
 var (
-	WordTagTab       = make(map[string]string)
-	isUserDictLoaded = false
+	WordTagTab = make(map[string]string)
 )
 
 type WordTag struct {
@@ -28,7 +27,10 @@ func init() {
 	_, filename, _, _ := runtime.Caller(1)
 	dict_dir := filepath.Dir(filepath.Dir(filename))
 	dict_path := filepath.Join(dict_dir, jiebago.Dictionary)
-	load_model(dict_path)
+	err := load_model(dict_path)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func load_model(f_name string) error {
@@ -38,15 +40,15 @@ func load_model(f_name string) error {
 	}
 	defer file.Close()
 
-	reader := bufio.NewReader(file)
-	for {
-		line, readError := reader.ReadString('\n')
-		if readError != nil && len(line) == 0 {
-			break
-		}
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
 		words := strings.Split(strings.TrimSpace(line), " ")
 		word, tag := words[0], words[2]
 		WordTagTab[word] = tag
+	}
+	if err := scanner.Err(); err != nil {
+		return err
 	}
 	return nil
 }
@@ -282,11 +284,9 @@ func cut(sentence string, HMM bool) []WordTag {
 }
 
 func Cut(sentence string, HMM bool) []WordTag {
-	if !isUserDictLoaded {
-		for key, value := range jiebago.UserWordTagTab {
-			WordTagTab[key] = value
-		}
-		isUserDictLoaded = true
+	for key := range jiebago.UserWordTagTab {
+		WordTagTab[key] = jiebago.UserWordTagTab[key]
+		delete(jiebago.UserWordTagTab, key)
 	}
 	return cut(sentence, HMM)
 }

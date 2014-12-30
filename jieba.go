@@ -2,7 +2,7 @@ package jiebago
 
 import (
 	"fmt"
-	"github.com/bububa/jiebago/finalseg"
+	"github.com/wangbin/jiebago/finalseg"
 	"regexp"
 	"sort"
 )
@@ -106,14 +106,15 @@ func GetDAG(sentence string) map[int][]int {
 	n := len(runes)
 	p := TT.T
 	i, j := 0, 0
+	var c rune
 	for {
 		if i >= n {
 			break
 		}
-		c := string(runes[j])
-		if node, ok := p[c]; ok {
-			p = node.SubNodes
-			if node.IsLeaf {
+		c = runes[j]
+		if _, ok := p.Nodes[c]; ok {
+			p = p.Nodes[c]
+			if p.IsLeaf {
 				if _, inDag := dag[i]; !inDag {
 					dag[i] = []int{j}
 				} else {

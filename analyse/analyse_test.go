@@ -1,7 +1,7 @@
 package analyse
 
 import (
-	"github.com/wangbin/jiebago"
+	"github.com/bububa/jiebago"
 	"testing"
 )
 
@@ -183,6 +183,7 @@ var (
 
 func TestExtractTags(t *testing.T) {
 	jiebago.SetDictionary("../dict.txt")
+	SetIdf("idf.txt")
 	for index, sentence := range test_contents {
 		result := ExtractTags(sentence, 20)
 		if len(result) != len(Tags[index]) {

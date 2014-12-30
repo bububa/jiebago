@@ -37,15 +37,12 @@ func (pss ProbStates) Len() int {
 
 func (pss ProbStates) Less(i, j int) bool {
 	if pss[i].Prob == pss[j].Prob {
-		if pss[i].ST.Tag < pss[j].ST.Tag {
-			return true
-		} else if pss[i].ST.State < pss[j].ST.State {
-			return true
-		} else {
-			return false
+		if pss[i].ST.State == pss[j].ST.State {
+			return pss[i].ST.Tag > pss[j].ST.Tag
 		}
+		return pss[i].ST.State > pss[j].ST.State
 	}
-	return pss[i].Prob < pss[j].Prob
+	return pss[i].Prob > pss[j].Prob
 }
 
 func (pss ProbStates) Swap(i, j int) {
@@ -87,6 +84,11 @@ func Viterbi(obs []rune) (float64, []StateTag) {
 			}
 		}
 		if len(obs_states) == 0 {
+			for key := range prev_states_expect_next {
+				obs_states = append(obs_states, key)
+			}
+		}
+		if len(obs_states) == 0 {
 			obs_states = ProbTransKeys
 		}
 		mem_path[t] = make(map[StateTag]StateTag)
@@ -99,7 +101,8 @@ func Viterbi(obs []rune) (float64, []StateTag) {
 					ST:   y0}
 				pss = append(pss, ps)
 			}
-			sort.Sort(sort.Reverse(pss))
+			//sort.Sort(sort.Reverse(pss))
+			sort.Sort(pss)
 			V[t][y] = pss[0].Prob
 			mem_path[t][y] = pss[0].ST
 		}
@@ -111,7 +114,8 @@ func Viterbi(obs []rune) (float64, []StateTag) {
 		ps := ProbState{Prob: V[vlength-1][y], ST: y}
 		last = append(last, ps)
 	}
-	sort.Sort(sort.Reverse(last))
+	//sort.Sort(sort.Reverse(last))
+	sort.Sort(last)
 	prob := last[0].Prob
 	state := last[0].ST
 	route := make([]StateTag, len(obs))
